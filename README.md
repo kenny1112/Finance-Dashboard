@@ -80,3 +80,11 @@ The React frontend now includes an expense entry form in `client/src/App.tsx`:
 Optional frontend environment variable:
 
 - `REACT_APP_API_URL` (default: `http://localhost:5000`)
+
+## Expense List and Filter (Part 6)
+
+Frontend now supports:
+
+- Load expenses by `userId` using `GET /api/expenses`
+- Filter list by category in UI
+- Delete item using `DELETE /api/expenses/:id?userId=<id>`

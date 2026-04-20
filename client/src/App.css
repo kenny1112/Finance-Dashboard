@@ -63,6 +63,88 @@
   cursor: not-allowed;
 }
 
+.list-toolbar {
+  display: flex;
+  gap: 12px;
+  align-items: end;
+  margin-top: 18px;
+}
+
+.secondary-btn {
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #0f172a;
+  border-radius: 8px;
+  padding: 10px 12px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.secondary-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.filter-label {
+  display: grid;
+  gap: 6px;
+  color: #1e293b;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.filter-label select {
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 0.95rem;
+}
+
+.expense-list {
+  margin-top: 18px;
+  display: grid;
+  gap: 10px;
+}
+
+.expense-item {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+}
+
+.expense-top {
+  margin: 0;
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+}
+
+.expense-sub {
+  margin: 6px 0 0;
+  color: #475569;
+  font-size: 0.92rem;
+}
+
+.danger-btn {
+  border: none;
+  border-radius: 8px;
+  background: #dc2626;
+  color: #ffffff;
+  padding: 8px 10px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.empty-text {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.92rem;
+}
+
 .message {
   margin-top: 14px;
   padding: 10px 12px;
