@@ -68,3 +68,15 @@ Core expenses CRUD endpoints:
 - `POST /api/expenses`
 - `GET /api/expenses?userId=<id>`
 - `DELETE /api/expenses/:id?userId=<id>`
+
+## Frontend Entry Form (Part 5)
+
+The React frontend now includes an expense entry form in `client/src/App.tsx`:
+
+- Fields: `userId`, `amount`, `category`, `expenseDate`, `note`
+- Validation: positive user ID, amount > 0, required date
+- API integration: `POST /api/expenses`
+
+Optional frontend environment variable:
+
+- `REACT_APP_API_URL` (default: `http://localhost:5000`)
