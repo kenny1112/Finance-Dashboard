@@ -51,3 +51,12 @@ Example run order:
 psql "$DATABASE_URL" -f server/db/migrations/001_init_schema.sql
 psql "$DATABASE_URL" -f server/db/seeds/001_default_categories.sql
 ```
+
+## Backend Setup (Part 3)
+
+The backend now includes:
+
+- PostgreSQL connection pool: `server/db/pool.js`
+- Express app and middleware: `server/app.js`
+- Server entry point: `server/index.js`
+- Health endpoint with DB ping: `GET /api/health`
