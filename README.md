@@ -37,3 +37,17 @@ Backend health check endpoint:
 3. Entry form and expenses list
 4. Charts and date filtering
 5. CSV export and deployment
+
+## Database (Part 2)
+
+Schema and seed SQL files are ready in:
+
+- `server/db/migrations/001_init_schema.sql`
+- `server/db/seeds/001_default_categories.sql`
+
+Example run order:
+
+```bash
+psql "$DATABASE_URL" -f server/db/migrations/001_init_schema.sql
+psql "$DATABASE_URL" -f server/db/seeds/001_default_categories.sql
+```
