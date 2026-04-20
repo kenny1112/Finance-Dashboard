@@ -1,4 +1,14 @@
 import React, { FormEvent, useMemo, useState } from "react";
+import {
+  ArcElement,
+  BarElement,
+  CategoryScale,
+  Chart as ChartJS,
+  Legend,
+  LinearScale,
+  Tooltip,
+} from "chart.js";
+import { Bar, Pie } from "react-chartjs-2";
 import "./App.css";
 
 type ExpenseFormState = {
@@ -35,6 +45,25 @@ const categories = [
   { id: 4, name: "Shopping" },
   { id: 5, name: "Health" },
   { id: 6, name: "Entertainment" },
+];
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  ArcElement,
+  Tooltip,
+  Legend
+);
+
+const categoryColors = [
+  "#ff8a65",
+  "#4db6ac",
+  "#7986cb",
+  "#ba68c8",
+  "#81c784",
+  "#ffd54f",
+  "#90a4ae",
 ];
 
 function App() {
@@ -119,6 +148,60 @@ function App() {
       (item) => String(item.categoryId ?? "") === categoryFilter
     );
   }, [expenses, categoryFilter]);
+
+  const pieChartData = useMemo(() => {
+    const totalsByCategory = new Map<string, number>();
+
+    filteredExpenses.forEach((item) => {
+      const label = item.categoryName || "未分類";
+      const amount = Number(item.amount) || 0;
+      totalsByCategory.set(label, (totalsByCategory.get(label) || 0) + amount);
+    });
+
+    const labels = Array.from(totalsByCategory.keys());
+    const values = labels.map((label) => totalsByCategory.get(label) || 0);
+
+    return {
+      labels,
+      datasets: [
+        {
+          label: "Category Total",
+          data: values,
+          backgroundColor: labels.map(
+            (_, index) => categoryColors[index % categoryColors.length]
+          ),
+          borderWidth: 1,
+        },
+      ],
+    };
+  }, [filteredExpenses]);
+
+  const barChartData = useMemo(() => {
+    const totalsByDate = new Map<string, number>();
+
+    filteredExpenses.forEach((item) => {
+      const key = item.expenseDate;
+      const amount = Number(item.amount) || 0;
+      totalsByDate.set(key, (totalsByDate.get(key) || 0) + amount);
+    });
+
+    const labels = Array.from(totalsByDate.keys()).sort(
+      (a, b) => new Date(a).getTime() - new Date(b).getTime()
+    );
+    const values = labels.map((label) => totalsByDate.get(label) || 0);
+
+    return {
+      labels,
+      datasets: [
+        {
+          label: "Daily Expense",
+          data: values,
+          backgroundColor: "#2563eb",
+          borderRadius: 4,
+        },
+      ],
+    };
+  }, [filteredExpenses]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -298,6 +381,37 @@ function App() {
                 </button>
               </article>
             ))
+          )}
+        </div>
+
+        <div className="charts">
+          <h2 className="chart-title">支出圖表</h2>
+          {filteredExpenses.length === 0 ? (
+            <p className="empty-text">載入支出後會顯示圖表。</p>
+          ) : (
+            <div className="chart-grid">
+              <div className="chart-card">
+                <h3>按日期支出（柱狀圖）</h3>
+                <Bar
+                  data={barChartData}
+                  options={{
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                  }}
+                />
+              </div>
+
+              <div className="chart-card">
+                <h3>類別分佈（圓形圖）</h3>
+                <Pie
+                  data={pieChartData}
+                  options={{
+                    responsive: true,
+                    plugins: { legend: { position: "bottom" } },
+                  }}
+                />
+              </div>
+            </div>
           )}
         </div>
 

@@ -88,3 +88,10 @@ Frontend now supports:
 - Load expenses by `userId` using `GET /api/expenses`
 - Filter list by category in UI
 - Delete item using `DELETE /api/expenses/:id?userId=<id>`
+
+## Charts (Part 7)
+
+Frontend now includes Chart.js visualizations based on current filtered expenses:
+
+- Bar chart: daily expense totals
+- Pie chart: category distribution
