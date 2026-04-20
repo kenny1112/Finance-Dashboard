@@ -95,3 +95,11 @@ Frontend now includes Chart.js visualizations based on current filtered expenses
 
 - Bar chart: daily expense totals
 - Pie chart: category distribution
+
+## Date Range Filter (Part 8)
+
+Date range filtering is now available end-to-end:
+
+- Backend: `GET /api/expenses` supports `startDate` and `endDate` (`YYYY-MM-DD`)
+- Frontend: start/end date controls in the list filter section
+- List and charts both update using the selected date range

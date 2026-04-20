@@ -19,6 +19,14 @@ function toPositiveInteger(value) {
   return parsed;
 }
 
+function isValidDateString(value) {
+  if (typeof value !== "string") {
+    return false;
+  }
+
+  return /^\d{4}-\d{2}-\d{2}$/.test(value);
+}
+
 router.post("/", async (req, res, next) => {
   try {
     const userId = toPositiveInteger(req.body.userId);
@@ -54,11 +62,48 @@ router.post("/", async (req, res, next) => {
 router.get("/", async (req, res, next) => {
   try {
     const userId = toPositiveInteger(req.query.userId);
+    const startDate = req.query.startDate;
+    const endDate = req.query.endDate;
+
     if (!userId) {
       return res.status(400).json({
         error: "Validation Error",
         message: "userId query parameter is required",
       });
+    }
+
+    if (startDate && !isValidDateString(startDate)) {
+      return res.status(400).json({
+        error: "Validation Error",
+        message: "startDate must be in YYYY-MM-DD format",
+      });
+    }
+
+    if (endDate && !isValidDateString(endDate)) {
+      return res.status(400).json({
+        error: "Validation Error",
+        message: "endDate must be in YYYY-MM-DD format",
+      });
+    }
+
+    if (startDate && endDate && startDate > endDate) {
+      return res.status(400).json({
+        error: "Validation Error",
+        message: "startDate cannot be later than endDate",
+      });
+    }
+
+    const whereConditions = ["e.user_id = $1"];
+    const values = [userId];
+
+    if (startDate) {
+      values.push(startDate);
+      whereConditions.push(`e.expense_date >= $${values.length}`);
+    }
+
+    if (endDate) {
+      values.push(endDate);
+      whereConditions.push(`e.expense_date <= $${values.length}`);
     }
 
     const query = `
@@ -73,11 +118,11 @@ router.get("/", async (req, res, next) => {
         e.created_at AS "createdAt"
       FROM expenses e
       LEFT JOIN categories c ON c.id = e.category_id
-      WHERE e.user_id = $1
+      WHERE ${whereConditions.join(" AND ")}
       ORDER BY e.expense_date DESC, e.created_at DESC
     `;
 
-    const result = await pool.query(query, [userId]);
+    const result = await pool.query(query, values);
     return res.status(200).json(result.rows);
   } catch (error) {
     next(error);

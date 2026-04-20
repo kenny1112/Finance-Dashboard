@@ -69,6 +69,8 @@ const categoryColors = [
 function App() {
   const [form, setForm] = useState<ExpenseFormState>(defaultForm);
   const [categoryFilter, setCategoryFilter] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [expenses, setExpenses] = useState<ExpenseItem[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingList, setIsLoadingList] = useState(false);
@@ -94,11 +96,27 @@ function App() {
       return;
     }
 
+    if (startDate && endDate && startDate > endDate) {
+      setErrorMessage("開始日期不能遲於結束日期。");
+      return;
+    }
+
     try {
+      setErrorMessage("");
       setIsLoadingList(true);
-      const response = await fetch(
-        `${apiBaseUrl}/api/expenses?userId=${encodeURIComponent(userId)}`
-      );
+      const params = new URLSearchParams({
+        userId: String(userId),
+      });
+
+      if (startDate) {
+        params.set("startDate", startDate);
+      }
+
+      if (endDate) {
+        params.set("endDate", endDate);
+      }
+
+      const response = await fetch(`${apiBaseUrl}/api/expenses?${params.toString()}`);
       const data = await response.json();
 
       if (!response.ok) {
@@ -263,7 +281,7 @@ function App() {
     <main className="page">
       <section className="card">
         <h1 className="title">Finance Dashboard</h1>
-        <p className="subtitle">新增支出 + 列表篩選（Part 6）</p>
+        <p className="subtitle">新增支出 + 列表篩選（Part 8）</p>
 
         <form className="expense-form" onSubmit={handleSubmit}>
           <label>
@@ -354,6 +372,26 @@ function App() {
                 </option>
               ))}
             </select>
+          </label>
+        </div>
+
+        <div className="date-toolbar">
+          <label className="filter-label">
+            開始日期
+            <input
+              type="date"
+              value={startDate}
+              onChange={(event) => setStartDate(event.target.value)}
+            />
+          </label>
+
+          <label className="filter-label">
+            結束日期
+            <input
+              type="date"
+              value={endDate}
+              onChange={(event) => setEndDate(event.target.value)}
+            />
           </label>
         </div>
 

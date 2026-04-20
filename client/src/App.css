@@ -93,11 +93,19 @@
   font-size: 0.95rem;
 }
 
-.filter-label select {
+.filter-label select,
+.filter-label input {
   border: 1px solid #cbd5e1;
   border-radius: 8px;
   padding: 10px 12px;
   font-size: 0.95rem;
+}
+
+.date-toolbar {
+  display: grid;
+  gap: 12px;
+  margin-top: 12px;
+  grid-template-columns: 1fr 1fr;
 }
 
 .expense-list {
