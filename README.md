@@ -1,122 +1,138 @@
 # Finance Dashboard
 
-A full-stack expense tracking dashboard built with React, TypeScript, Node.js, Express, and PostgreSQL.
+A full-stack personal finance dashboard for tracking expenses, filtering by category/date range, visualizing spending trends, and exporting data as CSV.
+
+## Tech Stack
+
+- Frontend: React + TypeScript
+- Backend: Node.js + Express
+- Database: PostgreSQL
+- Charts: Chart.js (`react-chartjs-2`)
+- Deploy: Vercel (frontend) + Railway (backend)
+
+## Features
+
+- Add expense entries (`amount`, `category`, `date`, `note`)
+- List expenses by `userId`
+- Filter expenses by category
+- Filter expenses by date range (`startDate`, `endDate`)
+- Delete individual expense records
+- Visualize data with bar and pie charts
+- Export filtered results as CSV
 
 ## Project Structure
 
-- `client/`: React + TypeScript frontend
-- `server/`: Express backend API
+- `client`: React + TypeScript frontend app
+- `server`: Express API and PostgreSQL integration
+- `server/db/migrations`: SQL schema migration scripts
+- `server/db/seeds`: SQL seed scripts
+- `docs/screenshots`: README screenshot assets
 
-## Quick Start
+## Local Setup
 
-### 1) Frontend
-
-```bash
-cd client
-npm install
-npm start
-```
-
-### 2) Backend
+### 1) Backend
 
 ```bash
 cd server
 npm install
 cp .env.example .env
+```
+
+Set `server/.env`:
+
+```env
+PORT=5000
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/finance_dashboard
+NODE_ENV=development
+```
+
+Run migrations and seed data:
+
+```bash
+psql "$DATABASE_URL" -f db/migrations/001_init_schema.sql
+psql "$DATABASE_URL" -f db/seeds/001_default_categories.sql
+```
+
+Start backend:
+
+```bash
 npm run dev
 ```
 
-Backend health check endpoint:
+Health check:
 
 - `GET http://localhost:5000/api/health`
 
-## Roadmap
-
-1. Database schema and migrations
-2. Expense CRUD APIs
-3. Entry form and expenses list
-4. Charts and date filtering
-5. CSV export and deployment
-
-## Database (Part 2)
-
-Schema and seed SQL files are ready in:
-
-- `server/db/migrations/001_init_schema.sql`
-- `server/db/seeds/001_default_categories.sql`
-
-Example run order:
+### 2) Frontend
 
 ```bash
-psql "$DATABASE_URL" -f server/db/migrations/001_init_schema.sql
-psql "$DATABASE_URL" -f server/db/seeds/001_default_categories.sql
+cd client
+npm install
 ```
 
-## Backend Setup (Part 3)
+Optional `client/.env`:
 
-The backend now includes:
+```env
+REACT_APP_API_URL=http://localhost:5000
+```
 
-- PostgreSQL connection pool: `server/db/pool.js`
-- Express app and middleware: `server/app.js`
-- Server entry point: `server/index.js`
-- Health endpoint with DB ping: `GET /api/health`
+Start frontend:
 
-## Expenses API (Part 4)
+```bash
+npm start
+```
 
-Core expenses CRUD endpoints:
+Build frontend:
 
+```bash
+npm run build
+```
+
+## API Endpoints
+
+- `GET /api/health`
 - `POST /api/expenses`
-- `GET /api/expenses?userId=<id>`
+- `GET /api/expenses?userId=<id>&startDate=<YYYY-MM-DD>&endDate=<YYYY-MM-DD>`
 - `DELETE /api/expenses/:id?userId=<id>`
+- `GET /api/expenses/export/csv?userId=<id>&startDate=<YYYY-MM-DD>&endDate=<YYYY-MM-DD>`
 
-## Frontend Entry Form (Part 5)
+## Deployment
 
-The React frontend now includes an expense entry form in `client/src/App.tsx`:
+### Frontend on Vercel
 
-- Fields: `userId`, `amount`, `category`, `expenseDate`, `note`
-- Validation: positive user ID, amount > 0, required date
-- API integration: `POST /api/expenses`
+- Root directory: `client`
+- Build command: `npm run build`
+- Output directory: `build`
+- Config file: `client/vercel.json`
+- Env var: `REACT_APP_API_URL=<your railway backend url>`
 
-Optional frontend environment variable:
+### Backend on Railway
 
-- `REACT_APP_API_URL` (default: `http://localhost:5000`)
+- Root directory: `server`
+- Start command: `npm start`
+- Config file: `server/railway.json`
+- Required env vars:
+  - `DATABASE_URL=<railway postgres url>`
+  - `NODE_ENV=production`
+  - `PORT` is handled by Railway
 
-## Expense List and Filter (Part 6)
+## Screenshots
 
-Frontend now supports:
+Add screenshots under `docs/screenshots/`, then keep these links in README:
 
-- Load expenses by `userId` using `GET /api/expenses`
-- Filter list by category in UI
-- Delete item using `DELETE /api/expenses/:id?userId=<id>`
+![Expense Form](docs/screenshots/expense-form.png)
+![Expense List and Filters](docs/screenshots/expense-list.png)
+![Charts View](docs/screenshots/charts.png)
 
-## Charts (Part 7)
+## Development Roadmap (Completed)
 
-Frontend now includes Chart.js visualizations based on current filtered expenses:
-
-- Bar chart: daily expense totals
-- Pie chart: category distribution
-
-## Date Range Filter (Part 8)
-
-Date range filtering is now available end-to-end:
-
-- Backend: `GET /api/expenses` supports `startDate` and `endDate` (`YYYY-MM-DD`)
-- Frontend: start/end date controls in the list filter section
-- List and charts both update using the selected date range
-
-## CSV Export and Deployment Config (Part 9)
-
-CSV export:
-
-- Backend endpoint: `GET /api/expenses/export/csv?userId=<id>&startDate=<YYYY-MM-DD>&endDate=<YYYY-MM-DD>`
-- Frontend includes `匯出 CSV` button and downloads the filtered results
-
-Deployment config files:
-
-- Frontend (Vercel): `client/vercel.json`
-- Backend (Railway): `server/railway.json`
-
-Suggested env vars:
-
-- Frontend (`client/.env`): `REACT_APP_API_URL=<your railway api url>`
-- Backend (`server/.env` on Railway): `DATABASE_URL=<railway postgres url>`, `NODE_ENV=production`
+- [x] React + TypeScript app setup
+- [x] PostgreSQL schema (`users`, `categories`, `expenses`)
+- [x] Express + PostgreSQL connection layer
+- [x] Expense CRUD APIs (create/list/delete)
+- [x] Entry form and validations
+- [x] Expense list and category filtering
+- [x] Chart.js integration (bar + pie)
+- [x] Date range filtering (frontend + backend)
+- [x] CSV export
+- [x] Vercel/Railway deployment configs
