@@ -103,3 +103,20 @@ Date range filtering is now available end-to-end:
 - Backend: `GET /api/expenses` supports `startDate` and `endDate` (`YYYY-MM-DD`)
 - Frontend: start/end date controls in the list filter section
 - List and charts both update using the selected date range
+
+## CSV Export and Deployment Config (Part 9)
+
+CSV export:
+
+- Backend endpoint: `GET /api/expenses/export/csv?userId=<id>&startDate=<YYYY-MM-DD>&endDate=<YYYY-MM-DD>`
+- Frontend includes `匯出 CSV` button and downloads the filtered results
+
+Deployment config files:
+
+- Frontend (Vercel): `client/vercel.json`
+- Backend (Railway): `server/railway.json`
+
+Suggested env vars:
+
+- Frontend (`client/.env`): `REACT_APP_API_URL=<your railway api url>`
+- Backend (`server/.env` on Railway): `DATABASE_URL=<railway postgres url>`, `NODE_ENV=production`

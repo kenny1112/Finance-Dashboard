@@ -27,6 +27,92 @@ function isValidDateString(value) {
   return /^\d{4}-\d{2}-\d{2}$/.test(value);
 }
 
+function parseListFilters(query) {
+  const userId = toPositiveInteger(query.userId);
+  const startDate = query.startDate;
+  const endDate = query.endDate;
+
+  if (!userId) {
+    return {
+      error: {
+        status: 400,
+        body: {
+          error: "Validation Error",
+          message: "userId query parameter is required",
+        },
+      },
+    };
+  }
+
+  if (startDate && !isValidDateString(startDate)) {
+    return {
+      error: {
+        status: 400,
+        body: {
+          error: "Validation Error",
+          message: "startDate must be in YYYY-MM-DD format",
+        },
+      },
+    };
+  }
+
+  if (endDate && !isValidDateString(endDate)) {
+    return {
+      error: {
+        status: 400,
+        body: {
+          error: "Validation Error",
+          message: "endDate must be in YYYY-MM-DD format",
+        },
+      },
+    };
+  }
+
+  if (startDate && endDate && startDate > endDate) {
+    return {
+      error: {
+        status: 400,
+        body: {
+          error: "Validation Error",
+          message: "startDate cannot be later than endDate",
+        },
+      },
+    };
+  }
+
+  return { userId, startDate, endDate };
+}
+
+function buildExpenseListFilterQuery(filters) {
+  const whereConditions = ["e.user_id = $1"];
+  const values = [filters.userId];
+
+  if (filters.startDate) {
+    values.push(filters.startDate);
+    whereConditions.push(`e.expense_date >= $${values.length}`);
+  }
+
+  if (filters.endDate) {
+    values.push(filters.endDate);
+    whereConditions.push(`e.expense_date <= $${values.length}`);
+  }
+
+  return { whereClause: whereConditions.join(" AND "), values };
+}
+
+function escapeCsvValue(value) {
+  if (value == null) {
+    return "";
+  }
+
+  const text = String(value);
+  if (/[",\n]/.test(text)) {
+    return `"${text.replace(/"/g, '""')}"`;
+  }
+
+  return text;
+}
+
 router.post("/", async (req, res, next) => {
   try {
     const userId = toPositiveInteger(req.body.userId);
@@ -61,50 +147,11 @@ router.post("/", async (req, res, next) => {
 
 router.get("/", async (req, res, next) => {
   try {
-    const userId = toPositiveInteger(req.query.userId);
-    const startDate = req.query.startDate;
-    const endDate = req.query.endDate;
-
-    if (!userId) {
-      return res.status(400).json({
-        error: "Validation Error",
-        message: "userId query parameter is required",
-      });
+    const filters = parseListFilters(req.query);
+    if (filters.error) {
+      return res.status(filters.error.status).json(filters.error.body);
     }
-
-    if (startDate && !isValidDateString(startDate)) {
-      return res.status(400).json({
-        error: "Validation Error",
-        message: "startDate must be in YYYY-MM-DD format",
-      });
-    }
-
-    if (endDate && !isValidDateString(endDate)) {
-      return res.status(400).json({
-        error: "Validation Error",
-        message: "endDate must be in YYYY-MM-DD format",
-      });
-    }
-
-    if (startDate && endDate && startDate > endDate) {
-      return res.status(400).json({
-        error: "Validation Error",
-        message: "startDate cannot be later than endDate",
-      });
-    }
-
-    const whereConditions = ["e.user_id = $1"];
-    const values = [userId];
-
-    if (startDate) {
-      values.push(startDate);
-      whereConditions.push(`e.expense_date >= $${values.length}`);
-    }
-
-    if (endDate) {
-      values.push(endDate);
-      whereConditions.push(`e.expense_date <= $${values.length}`);
-    }
+    const { whereClause, values } = buildExpenseListFilterQuery(filters);
 
     const query = `
       SELECT
@@ -118,12 +165,62 @@ router.get("/", async (req, res, next) => {
         e.created_at AS "createdAt"
       FROM expenses e
       LEFT JOIN categories c ON c.id = e.category_id
-      WHERE ${whereConditions.join(" AND ")}
+      WHERE ${whereClause}
       ORDER BY e.expense_date DESC, e.created_at DESC
     `;
 
     const result = await pool.query(query, values);
     return res.status(200).json(result.rows);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get("/export/csv", async (req, res, next) => {
+  try {
+    const filters = parseListFilters(req.query);
+    if (filters.error) {
+      return res.status(filters.error.status).json(filters.error.body);
+    }
+
+    const { whereClause, values } = buildExpenseListFilterQuery(filters);
+    const query = `
+      SELECT
+        e.id,
+        e.user_id AS "userId",
+        c.name AS "categoryName",
+        e.amount,
+        e.expense_date AS "expenseDate",
+        e.note,
+        e.created_at AS "createdAt"
+      FROM expenses e
+      LEFT JOIN categories c ON c.id = e.category_id
+      WHERE ${whereClause}
+      ORDER BY e.expense_date DESC, e.created_at DESC
+    `;
+
+    const result = await pool.query(query, values);
+    const headers = ["id", "userId", "categoryName", "amount", "expenseDate", "note", "createdAt"];
+    const rows = result.rows.map((row) =>
+      [
+        row.id,
+        row.userId,
+        row.categoryName || "",
+        row.amount,
+        row.expenseDate,
+        row.note || "",
+        row.createdAt,
+      ]
+        .map(escapeCsvValue)
+        .join(",")
+    );
+
+    const csv = [headers.join(","), ...rows].join("\n");
+    const dateTag = new Date().toISOString().slice(0, 10);
+
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Disposition", `attachment; filename="expenses-${dateTag}.csv"`);
+    return res.status(200).send(csv);
   } catch (error) {
     next(error);
   }

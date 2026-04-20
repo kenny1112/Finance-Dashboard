@@ -74,6 +74,7 @@ function App() {
   const [expenses, setExpenses] = useState<ExpenseItem[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingList, setIsLoadingList] = useState(false);
+  const [isExportingCsv, setIsExportingCsv] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
@@ -154,6 +155,59 @@ function App() {
       setExpenses((prev) => prev.filter((item) => item.id !== expenseId));
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "未知錯誤");
+    }
+  };
+
+  const handleExportCsv = async () => {
+    if (!form.userId.trim() || Number(form.userId) <= 0) {
+      setErrorMessage("User ID 必須為正整數。");
+      return;
+    }
+
+    if (startDate && endDate && startDate > endDate) {
+      setErrorMessage("開始日期不能遲於結束日期。");
+      return;
+    }
+
+    try {
+      setErrorMessage("");
+      setSuccessMessage("");
+      setIsExportingCsv(true);
+
+      const params = new URLSearchParams({
+        userId: form.userId,
+      });
+      if (startDate) {
+        params.set("startDate", startDate);
+      }
+      if (endDate) {
+        params.set("endDate", endDate);
+      }
+
+      const response = await fetch(
+        `${apiBaseUrl}/api/expenses/export/csv?${params.toString()}`
+      );
+
+      if (!response.ok) {
+        const errorPayload = await response.json().catch(() => ({}));
+        throw new Error(errorPayload?.message || "CSV 匯出失敗");
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = `expenses-${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      document.body.removeChild(anchor);
+      window.URL.revokeObjectURL(url);
+
+      setSuccessMessage("CSV 匯出成功。");
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "未知錯誤");
+    } finally {
+      setIsExportingCsv(false);
     }
   };
 
@@ -357,6 +411,15 @@ function App() {
             className="secondary-btn"
           >
             {isLoadingList ? "載入中..." : "載入支出列表"}
+          </button>
+
+          <button
+            type="button"
+            onClick={handleExportCsv}
+            disabled={isExportingCsv}
+            className="secondary-btn"
+          >
+            {isExportingCsv ? "匯出中..." : "匯出 CSV"}
           </button>
 
           <label className="filter-label">
