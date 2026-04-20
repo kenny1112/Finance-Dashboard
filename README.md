@@ -60,3 +60,11 @@ The backend now includes:
 - Express app and middleware: `server/app.js`
 - Server entry point: `server/index.js`
 - Health endpoint with DB ping: `GET /api/health`
+
+## Expenses API (Part 4)
+
+Core expenses CRUD endpoints:
+
+- `POST /api/expenses`
+- `GET /api/expenses?userId=<id>`
+- `DELETE /api/expenses/:id?userId=<id>`
